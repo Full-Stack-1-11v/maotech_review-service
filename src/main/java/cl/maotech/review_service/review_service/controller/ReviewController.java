@@ -1,9 +1,13 @@
 package cl.maotech.review_service.review_service.controller;
 
 import java.util.List;
+import java.util.Optional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.EntityModel;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -29,6 +33,11 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @Tag(name = "Review", description = "Controlador para manejar reseñas de productos")
 public class ReviewController {
 
+    /**
+     * Logger para registrar eventos en el controlador.
+     */
+    private static final Logger LOGGER = LoggerFactory.getLogger(ReviewController.class);
+
     @Autowired
     private ReviewModelAssembler reviewModelAssembler;
 
@@ -53,10 +62,21 @@ public class ReviewController {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Solicitud inválida")
     })
     @PostMapping
-    public ResponseEntity<Review> createReview(@RequestBody Review review) {
-        return reviewService.save(review)
-                .map(savedReview -> ResponseEntity.status(201).body(savedReview))
-                .orElse(ResponseEntity.badRequest().build());
+    public ResponseEntity<EntityModel<Review>> createReview(@RequestBody Review review) {
+        LOGGER.info("[createReview] Start: {}", review);
+        LOGGER.debug("[createReview] Creating new review", review);
+        Optional<Review> newReview = reviewService.save(review);
+
+        EntityModel<Review> reviewModel = reviewModelAssembler.toModel(newReview.orElse(null));
+        
+        if (reviewModel == null) {
+            LOGGER.error("[createReview] Error creating review: {}", review);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+        LOGGER.info("[createReview] Review created successfully: {}", reviewModel);
+        LOGGER.debug("[createReview] Review details: {}", reviewModel);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(reviewModel);
     }
 
     /**
@@ -70,10 +90,17 @@ public class ReviewController {
     })
      @GetMapping
     public ResponseEntity<List<EntityModel<Review>>> getReviews() {
+        LOGGER.info("[getReviews] Start fetching all reviews");
+        LOGGER.debug("[getReviews] Fetching all reviews from the service");
+
         List<EntityModel<Review>> reviews = reviewService.findAll().stream().map(reviewModelAssembler::toModel).toList();
         if (reviews.isEmpty()) {
+            LOGGER.warn("[getReviews] No reviews found");
             return ResponseEntity.noContent().build();
         }
+
+        LOGGER.info("[getReviews] Successfully fetched {} reviews", reviews.size());
+        LOGGER.debug("[getReviews] Reviews details: {}", reviews);
         return ResponseEntity.ok(reviews);
     }
 
@@ -88,12 +115,23 @@ public class ReviewController {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Reseña no encontrada")
     })
     @GetMapping("/{id}")
-    public ResponseEntity<Review> getReviewById(@PathVariable Integer id) {
-        return reviewService.findById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
-    }
+    public ResponseEntity<EntityModel<Review>> getReviewById(@PathVariable Integer id) {
+        LOGGER.info("[getReviewById] Start fetching review with ID: {}", id);
+        LOGGER.debug("[getReviewById] Fetching review from the service");
+        
+        Review review = reviewService.findById(id)
+                .orElse(null);
+        if (review == null) {
+            LOGGER.warn("[getReviewById] Review with ID {} not found", id);
+            return ResponseEntity.notFound().build();
+        }
+        EntityModel<Review> reviewModel = reviewModelAssembler.toModel(review);
 
+        LOGGER.info("[getReviewById] Successfully fetched review: {}", reviewModel);
+        LOGGER.debug("[getReviewById] Review details: {}", reviewModel);
+        return ResponseEntity.ok(reviewModel);
+    }
+    
     /**
      * Actualiza una reseña existente.
      * @param id ID de la reseña a actualizar
@@ -107,6 +145,17 @@ public class ReviewController {
     })
     @PostMapping("/{id}")
     public ResponseEntity<Review> updateReview(@PathVariable Integer id, @RequestBody Review review) {
+        LOGGER.info("[updateReview] Start updating review with ID: {}", id);
+        LOGGER.debug("[updateReview] Review details before update: {}", review);
+        
+        // Verificar si la reseña existe
+        Optional<Review> existingReview = reviewService.findById(id);
+        if (existingReview.isEmpty()) {
+            LOGGER.warn("[updateReview] Review with ID {} not found", id);
+            return ResponseEntity.notFound().build();
+        }
+
+        LOGGER.debug("[updateReview] Existing review found: {}", existingReview.get());
         return reviewService.update(review)
                 .map(updatedReview -> ResponseEntity.ok(updatedReview))
                 .orElse(ResponseEntity.notFound().build());
