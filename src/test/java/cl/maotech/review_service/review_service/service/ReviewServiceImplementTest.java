@@ -5,11 +5,15 @@ import static org.mockito.Mockito.when;
 
 import java.util.List;
 
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+import org.junit.jupiter.api.Test;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ActiveProfiles;
 
+import cl.maotech.review_service.review_service.client.CourseFeignClient;
+import cl.maotech.review_service.review_service.model.CourseDTO;
 import cl.maotech.review_service.review_service.model.Review;
 import cl.maotech.review_service.review_service.repository.ReviewRepository;
 
@@ -17,12 +21,16 @@ import cl.maotech.review_service.review_service.repository.ReviewRepository;
 @ActiveProfiles("test")
 public class ReviewServiceImplementTest {
 
-    @InjectMocks
+    @Autowired
     private ReviewServiceImplement reviewServiceImplement;
 
-    @Mock
+    @MockBean
     private ReviewRepository reviewRepository;
 
+    @MockBean
+    private CourseFeignClient courseFeignClient;
+
+    @Test
     public void testFindAll() {
         // Given
         List<Review> mockReviews = List.of(
@@ -37,14 +45,17 @@ public class ReviewServiceImplementTest {
         // Then
         // Aquí puedes verificar el resultado esperado
         List<Review> reviews = reviewServiceImplement.findAll();
-        assertEquals(null, reviews);
+        assertEquals(2, reviews.size());
     }
 
+    @Test
     public void testSave() {
         // Given
         Review mockReview = new Review(1, 5, "Great course!", 1L);
 
         // When
+        CourseDTO mockCourseDTO = new CourseDTO();
+        when(courseFeignClient.findById(mockReview.getCourseId())).thenReturn(mockCourseDTO);
         when(reviewRepository.save(mockReview)).thenReturn(mockReview);
 
         // Then
@@ -52,6 +63,7 @@ public class ReviewServiceImplementTest {
         assertEquals(mockReview, savedReview);
     }
 
+    @Test
     public void testFindById() {
         // Given
         Integer reviewId = 1;
@@ -65,6 +77,7 @@ public class ReviewServiceImplementTest {
         assertEquals(mockReview, foundReview);
     }
 
+    @Test
     public void testUpdate() {
         // Given
         Review existingReview = new Review(1, 5, "Great course!", 1L);

@@ -1,5 +1,6 @@
 package cl.maotech.review_service.review_service.controller;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -12,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -29,7 +31,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
  * Permite crear, obtener, actualizar y listar reseñas.
  */
 @RestController
-@RequestMapping("/api/v1/review")
+@RequestMapping("/api/v1/reviews")
 @Tag(name = "Review", description = "Controlador para manejar reseñas de productos")
 public class ReviewController {
 
@@ -66,13 +68,13 @@ public class ReviewController {
         LOGGER.info("[createReview] Start: {}", review);
         LOGGER.debug("[createReview] Creating new review", review);
         Optional<Review> newReview = reviewService.save(review);
-
-        EntityModel<Review> reviewModel = reviewModelAssembler.toModel(newReview.orElse(null));
         
-        if (reviewModel == null) {
+        if (newReview.isEmpty()) {
             LOGGER.error("[createReview] Error creating review: {}", review);
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
+
+        EntityModel<Review> reviewModel = reviewModelAssembler.toModel(newReview.get());
         LOGGER.info("[createReview] Review created successfully: {}", reviewModel);
         LOGGER.debug("[createReview] Review details: {}", reviewModel);
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -96,7 +98,7 @@ public class ReviewController {
         List<EntityModel<Review>> reviews = reviewService.findAll().stream().map(reviewModelAssembler::toModel).toList();
         if (reviews.isEmpty()) {
             LOGGER.warn("[getReviews] No reviews found");
-            return ResponseEntity.noContent().build();
+            return ResponseEntity.ok(Collections.emptyList());
         }
 
         LOGGER.info("[getReviews] Successfully fetched {} reviews", reviews.size());
@@ -143,7 +145,7 @@ public class ReviewController {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Reseña actualizada exitosamente"),
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Reseña no encontrada")
     })
-    @PostMapping("/{id}")
+    @PutMapping("/{id}")
     public ResponseEntity<Review> updateReview(@PathVariable Integer id, @RequestBody Review review) {
         LOGGER.info("[updateReview] Start updating review with ID: {}", id);
         LOGGER.debug("[updateReview] Review details before update: {}", review);
