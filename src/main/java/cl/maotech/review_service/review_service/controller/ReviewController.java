@@ -49,6 +49,10 @@ public class ReviewController {
      */
     private ReviewService reviewService;
 
+    /**
+     * Constructor del controlador que inyecta el servicio de reseñas.
+     * @param reviewService Servicio de reseñas
+     */
     public ReviewController(ReviewService reviewService) {
         this.reviewService = reviewService;
     }

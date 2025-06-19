@@ -49,7 +49,7 @@ public class ReviewServiceImplementTest {
     }
 
     @Test
-    public void testSave() {
+    public void testSave_ok() {
         // Given
         Review mockReview = new Review(1, 5, "Great course!", 1L);
 
@@ -61,6 +61,19 @@ public class ReviewServiceImplementTest {
         // Then
         Review savedReview = reviewServiceImplement.save(mockReview).orElse(null);
         assertEquals(mockReview, savedReview);
+    }
+
+    @Test
+    public void testSave_courseNotFound() {
+        // Given
+        Review mockReview = new Review(1, 5, "Great course!", 1L);
+
+        // When
+        when(courseFeignClient.findById(mockReview.getCourseId())).thenReturn(null);
+
+        // Then
+        Review savedReview = reviewServiceImplement.save(mockReview).orElse(null);
+        assertEquals(null, savedReview); // Debe ser null si el curso no existe
     }
 
     @Test
@@ -92,5 +105,13 @@ public class ReviewServiceImplementTest {
         assertEquals(updatedReview, result);
     }
 
+    @Test
+    public void testDelete() {
+        // Given
+        Integer reviewId = 1;
+
+        // When
+        reviewServiceImplement.delete(reviewId);
+    }
 
 }

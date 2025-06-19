@@ -2,10 +2,13 @@ package cl.maotech.review_service.review_service.model;
 
 import java.time.LocalDateTime;
 
+import lombok.AllArgsConstructor;
+
 /**
  * Data Transfer Object for Course.
  * This class is used to transfer course data between layers.
  */
+@AllArgsConstructor
 public class CourseDTO {
 
     /**

@@ -5,6 +5,10 @@ import java.util.Optional;
 
 import cl.maotech.review_service.review_service.model.Review;
 
+/**
+ * Service interface for managing reviews.
+ * This interface defines methods for saving, finding, updating, and deleting reviews.
+ */
 public interface ReviewService {
 
     Optional<Review> save(Review review);
