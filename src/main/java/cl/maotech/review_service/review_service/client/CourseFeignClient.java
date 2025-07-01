@@ -9,17 +9,17 @@ import org.springframework.web.bind.annotation.PathVariable;
 import cl.maotech.review_service.review_service.model.CourseDTO;
 
 /**
- * Feign client for interacting with the Course Service.
+ * Feign client for interacting with the Course Service through the internal network.
  * This client provides methods to retrieve course information from the Course Service.
  */
-@FeignClient(url = "http://localhost:8080/api/courses", name = "course-service")
+@FeignClient(url = "${microservices.course-service.url}", name = "course-service")
 public interface CourseFeignClient {
 
     /**
-     * Retrieves a list of all courses. 
+     * Retrieves a list of all courses.
      * @return a list of CourseDTO objects representing all courses.
      */
-    @GetMapping()
+    @GetMapping("/cursos")
     List<CourseDTO> findAll();
     
     /**
@@ -27,6 +27,6 @@ public interface CourseFeignClient {
      * @param id the ID of the course to retrieve.
      * @return a CourseDTO object representing the course with the specified ID.
      */
-    @GetMapping("/{id}")
+    @GetMapping("/cursos/{id}")
     CourseDTO findById(@PathVariable Long id);
 }
