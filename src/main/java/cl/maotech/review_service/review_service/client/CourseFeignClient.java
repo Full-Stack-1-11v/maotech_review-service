@@ -12,7 +12,7 @@ import cl.maotech.review_service.review_service.model.CourseDTO;
  * Feign client for interacting with the Course Service.
  * This client provides methods to retrieve course information from the Course Service.
  */
-@FeignClient(url = "localhost:8082/api/v1/cursos", name = "course-service")
+@FeignClient(url = "http://localhost:8080/api/courses", name = "course-service")
 public interface CourseFeignClient {
 
     /**
